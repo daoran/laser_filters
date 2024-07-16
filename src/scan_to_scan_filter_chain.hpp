@@ -49,7 +49,6 @@ protected:
 
   message_filters::Subscriber<sensor_msgs::msg::LaserScan> scan_sub_;
   std::shared_ptr<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>> tf_filter_;
-  double tf_filter_tolerance_;
 
   // Filter Chain
   filters::FilterChain<sensor_msgs::msg::LaserScan> filter_chain_;
@@ -57,6 +56,10 @@ protected:
   // Components for publishing
   sensor_msgs::msg::LaserScan msg_;
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr output_pub_;
+
+  // Parameters
+  std::string tf_message_filter_target_frame_;
+  double tf_filter_tolerance_;
 
 public:
   // Constructor

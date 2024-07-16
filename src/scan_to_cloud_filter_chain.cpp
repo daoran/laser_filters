@@ -50,21 +50,22 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   cloud_filter_chain_("sensor_msgs::msg::PointCloud2"),
   scan_filter_chain_("sensor_msgs::msg::LaserScan")
 {
-  this->declare_parameter("high_fidelity", false);
-  this->declare_parameter("notifier_tolerance", 0.03);
-  this->declare_parameter("target_frame", std::string("base_link"));
-  this->declare_parameter("incident_angle_correction", true);
+  rcl_interfaces::msg::ParameterDescriptor read_only_desc;
+  read_only_desc.read_only = true;
 
+  // Declare parameters
+  this->declare_parameter("high_fidelity", false, read_only_desc);
+  this->declare_parameter("notifier_tolerance", 0.03, read_only_desc);
+  this->declare_parameter("target_frame", "base_link", read_only_desc);
+  this->declare_parameter("incident_angle_correction", true, read_only_desc);
+  this->declare_parameter("laser_max_range", DBL_MAX, read_only_desc);
+  
+  // Get parameters
   this->get_parameter("high_fidelity", high_fidelity_);
   this->get_parameter("notifier_tolerance", tf_tolerance_);
   this->get_parameter("target_frame", target_frame_);
   this->get_parameter("incident_angle_correction", incident_angle_correction_);
-
-  this->get_parameter_or("filter_window", window_, 2);
-  this->get_parameter_or("laser_max_range", laser_max_range_, DBL_MAX);
-  this->get_parameter_or("scan_topic", scan_topic_, std::string("tilt_scan"));
-  this->get_parameter_or("cloud_topic", cloud_topic_, std::string("tilt_laser_cloud_filtered"));
-
+  this->get_parameter("laser_max_range", laser_max_range_);
 
   filter_.setTargetFrame(target_frame_);
   filter_.registerCallback(

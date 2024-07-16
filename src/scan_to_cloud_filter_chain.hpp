@@ -58,13 +58,6 @@ public:
   // ROS related
   laser_geometry::LaserProjection projector_; // Used to project laser scans
 
-  double laser_max_range_; // Used in laser scan projection
-  int window_;
-
-  bool high_fidelity_;                    // High fidelity (interpolating time across scan)
-  std::string target_frame_;                   // Target frame for high fidelity result
-  std::string scan_topic_, cloud_topic_;
-
   // TF
   tf2_ros::Buffer buffer_;
   tf2_ros::TransformListener tf_;
@@ -72,12 +65,16 @@ public:
   message_filters::Subscriber<sensor_msgs::msg::LaserScan> sub_;
   tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan> filter_;
 
-  double tf_tolerance_;
   filters::FilterChain<sensor_msgs::msg::PointCloud2> cloud_filter_chain_;
   filters::FilterChain<sensor_msgs::msg::LaserScan> scan_filter_chain_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 
+  // Parameters
+  bool high_fidelity_; // High fidelity (interpolating time across scan)
+  double tf_tolerance_;
+  std::string target_frame_; // Target frame for high fidelity result
   bool incident_angle_correction_;
+  double laser_max_range_; // Used in laser scan projection
 
   ScanToCloudFilterChain(
     const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
