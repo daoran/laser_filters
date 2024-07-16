@@ -46,7 +46,6 @@
 #include <filters/filter_base.hpp>
 
 #include <sensor_msgs/msg/laser_scan.hpp>
-#include <sensor_msgs/point_cloud_conversion.hpp>
 #include <laser_geometry/laser_geometry.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/polygon.hpp>
@@ -201,6 +200,19 @@ std::string polygonToString(geometry_msgs::msg::Polygon polygon)
   }
   polygon_string += "]";
   return polygon_string;
+}
+
+static inline int getPointCloud2FieldIndex(
+  const sensor_msgs::msg::PointCloud2 & cloud,
+  const std::string & field_name)
+{
+  // Get the index we need
+  for (size_t d = 0; d < cloud.fields.size(); ++d) {
+    if (cloud.fields[d].name == field_name) {
+      return static_cast<int>(d);
+    }
+  }
+  return -1;
 }
 
 using namespace std::literals;
@@ -391,10 +403,10 @@ public:
       return false;
     }
 
-    const int i_idx_c = sensor_msgs::getPointCloud2FieldIndex(laser_cloud, "index");
-    const int x_idx_c = sensor_msgs::getPointCloud2FieldIndex(laser_cloud, "x");
-    const int y_idx_c = sensor_msgs::getPointCloud2FieldIndex(laser_cloud, "y");
-    const int z_idx_c = sensor_msgs::getPointCloud2FieldIndex(laser_cloud, "z");
+    const int i_idx_c = getPointCloud2FieldIndex(laser_cloud, "index");
+    const int x_idx_c = getPointCloud2FieldIndex(laser_cloud, "x");
+    const int y_idx_c = getPointCloud2FieldIndex(laser_cloud, "y");
+    const int z_idx_c = getPointCloud2FieldIndex(laser_cloud, "z");
 
     if (i_idx_c == -1 || x_idx_c == -1 || y_idx_c == -1 || z_idx_c == -1)
     {
