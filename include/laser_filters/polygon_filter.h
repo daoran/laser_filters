@@ -536,7 +536,6 @@ protected:
     {
       RCLCPP_WARN_THROTTLE(logging_interface_->get_logger(),
           *get_clock(), 1000,
-          "StaticLaserScanPolygonFilter",
           "Could not get transform, ignoring laser scan! %s", ex.what());
           return false;
     }
