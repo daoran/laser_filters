@@ -53,7 +53,7 @@
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 
 #include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2_ros/buffer.h>
 #include <boost/thread.hpp>
 #include <rclcpp/rclcpp.hpp>
