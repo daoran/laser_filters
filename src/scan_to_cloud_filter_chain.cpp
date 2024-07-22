@@ -46,7 +46,8 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   buffer_(this->get_clock()),
   tf_(buffer_),
   sub_(this, "scan", rmw_qos_profile_sensor_data),
-  filter_(sub_, buffer_, "", 50, this->shared_from_this()),
+  filter_(sub_, buffer_, "", 50, this->get_node_logging_interface(),
+    this->get_node_clock_interface()),
   cloud_filter_chain_("sensor_msgs::msg::PointCloud2"),
   scan_filter_chain_("sensor_msgs::msg::LaserScan")
 {
