@@ -16,17 +16,21 @@ ament_auto_add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
 ament_auto_add_library(laser_filter_chains SHARED
                          src/scan_to_cloud_filter_chain.cpp
                          src/scan_to_scan_filter_chain.cpp)
-rclcpp_components_register_nodes(laser_filter_chains
-                         "ScanToCloudFilterChain"
-                         "ScanToScanFilterChain")
 
-set(FILTER_CHAINS
-    scan_to_cloud_filter_chain
-    scan_to_scan_filter_chain
+# The rclcpp_components_register_node macro registers an rclcpp component for the node with
+# the ament resource index AND creates a templated executable that spins the given node.
+
+rclcpp_components_register_node(
+    laser_filter_chains
+    PLUGIN "ScanToCloudFilterChain"
+    EXECUTABLE "scan_to_cloud_filter_chain"
 )
-foreach(FILTER_CHAIN ${FILTER_CHAINS})
-    ament_auto_add_executable(${FILTER_CHAIN} src/${FILTER_CHAIN}_node.cpp)
-endforeach()
+
+rclcpp_components_register_node(
+    laser_filter_chains
+    PLUGIN "ScanToScanFilterChain"
+    EXECUTABLE "scan_to_scan_filter_chain"
+)
 
 ament_auto_add_executable(generic_laser_filter_node src/generic_laser_filter_node.cpp)
 
