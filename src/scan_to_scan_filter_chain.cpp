@@ -47,17 +47,24 @@ ScanToScanFilterChain::ScanToScanFilterChain(
     "",
     this->get_node_logging_interface(), this->get_node_parameters_interface());
 
-  std::string tf_message_filter_target_frame;
-  if (this->get_parameter("tf_message_filter_target_frame", tf_message_filter_target_frame)) {
+  rcl_interfaces::msg::ParameterDescriptor read_only_desc;
+  read_only_desc.read_only = true;
 
-    this->get_parameter_or("tf_message_filter_tolerance", tf_filter_tolerance_, 0.03);
+  // Declare parameters
+  this->declare_parameter("tf_message_filter_target_frame", "", read_only_desc);
+  this->declare_parameter("tf_message_filter_tolerance", 0.03, read_only_desc);
 
+  // Get parameters
+  this->get_parameter("tf_message_filter_target_frame", tf_message_filter_target_frame_);
+  this->get_parameter("tf_message_filter_tolerance", tf_filter_tolerance_);
+
+  if (!tf_message_filter_target_frame_.empty()) {
     tf_.reset(new tf2_ros::TransformListener(buffer_));
     tf_filter_.reset(
       new tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>(
         scan_sub_, buffer_, "",
         50, this->get_node_logging_interface(), this->get_node_clock_interface()));
-    tf_filter_->setTargetFrame(tf_message_filter_target_frame);
+    tf_filter_->setTargetFrame(tf_message_filter_target_frame_);
     tf_filter_->setTolerance(std::chrono::duration<double>(tf_filter_tolerance_));
 
     // Setup tf::MessageFilter generates callback
