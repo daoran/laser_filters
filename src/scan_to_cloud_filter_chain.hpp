@@ -62,7 +62,7 @@ public:
   tf2_ros::Buffer buffer_;
   tf2_ros::TransformListener tf_;
 
-  message_filters::Subscriber<sensor_msgs::msg::LaserScan> sub_;
+  message_filters::Subscriber<sensor_msgs::msg::LaserScan> scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan> filter_;
 
   filters::FilterChain<sensor_msgs::msg::PointCloud2> cloud_filter_chain_;
@@ -70,6 +70,9 @@ public:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 
   // Parameters
+  #ifndef IS_HUMBLE
+  bool lazy_subscription_;
+  #endif
   bool high_fidelity_; // High fidelity (interpolating time across scan)
   double tf_tolerance_;
   std::string target_frame_; // Target frame for high fidelity result

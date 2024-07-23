@@ -45,8 +45,7 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   laser_max_range_(DBL_MAX),
   buffer_(this->get_clock()),
   tf_(buffer_),
-  sub_(this, "scan", rmw_qos_profile_sensor_data),
-  filter_(sub_, buffer_, "", 50, this->get_node_logging_interface(),
+  filter_(scan_sub_, buffer_, "", 50, this->get_node_logging_interface(),
     this->get_node_clock_interface()),
   cloud_filter_chain_("sensor_msgs::msg::PointCloud2"),
   scan_filter_chain_("sensor_msgs::msg::LaserScan")
@@ -55,13 +54,19 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   read_only_desc.read_only = true;
 
   // Declare parameters
+  #ifndef IS_HUMBLE
+  this->declare_parameter("lazy_subscription", false, read_only_desc);
+  #endif
   this->declare_parameter("high_fidelity", false, read_only_desc);
   this->declare_parameter("notifier_tolerance", 0.03, read_only_desc);
   this->declare_parameter("target_frame", "base_link", read_only_desc);
   this->declare_parameter("incident_angle_correction", true, read_only_desc);
   this->declare_parameter("laser_max_range", DBL_MAX, read_only_desc);
-  
+
   // Get parameters
+  #ifndef IS_HUMBLE
+  this->get_parameter("lazy_subscription", lazy_subscription_);
+  #endif
   this->get_parameter("high_fidelity", high_fidelity_);
   this->get_parameter("notifier_tolerance", tf_tolerance_);
   this->get_parameter("target_frame", target_frame_);
@@ -80,11 +85,30 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
     this->get_node_timers_interface());
   buffer_.setCreateTimerInterface(timer_interface);
 
-  sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
-
-  filter_.connectInput(sub_);
-
-  cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("cloud_filtered", 10);
+  #ifndef IS_HUMBLE
+  if (lazy_subscription_) {
+    rclcpp::PublisherOptions pub_options;
+    pub_options.event_callbacks.matched_callback =
+      [this](rclcpp::MatchedInfo & s)
+      {
+        if (s.current_count == 0) {
+          scan_sub_.unsubscribe();
+        } else if (!scan_sub_.getSubscriber()) {
+          scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+        }
+      };
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("cloud_filtered",
+      rclcpp::SensorDataQoS(), pub_options);
+  } else {
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("cloud_filtered",
+      rclcpp::SensorDataQoS());
+    scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+  }
+  #else
+  cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+    "cloud_filtered", rclcpp::SensorDataQoS());
+  scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+  #endif
 
   cloud_filter_chain_.configure(
     "cloud_filter_chain",

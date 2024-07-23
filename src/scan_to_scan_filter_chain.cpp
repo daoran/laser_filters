@@ -38,7 +38,6 @@ ScanToScanFilterChain::ScanToScanFilterChain(
 : rclcpp::Node("scan_to_scan_filter_chain", ns, options),
   tf_(NULL),
   buffer_(this->get_clock()),
-  scan_sub_(this, "scan", rmw_qos_profile_sensor_data),
   tf_filter_(NULL),
   filter_chain_("sensor_msgs::msg::LaserScan")
 {
@@ -51,10 +50,16 @@ ScanToScanFilterChain::ScanToScanFilterChain(
   read_only_desc.read_only = true;
 
   // Declare parameters
+  #ifndef IS_HUMBLE
+  this->declare_parameter("lazy_subscription", false, read_only_desc);
+  #endif
   this->declare_parameter("tf_message_filter_target_frame", "", read_only_desc);
   this->declare_parameter("tf_message_filter_tolerance", 0.03, read_only_desc);
 
   // Get parameters
+  #ifndef IS_HUMBLE
+  this->get_parameter("lazy_subscription", lazy_subscription_);
+  #endif
   this->get_parameter("tf_message_filter_target_frame", tf_message_filter_target_frame_);
   this->get_parameter("tf_message_filter_tolerance", tf_filter_tolerance_);
 
@@ -80,8 +85,30 @@ ScanToScanFilterChain::ScanToScanFilterChain(
         std::placeholders::_1));
   }
 
-  // Advertise output
-  output_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan_filtered", 1000);
+  #ifndef IS_HUMBLE
+  if (lazy_subscription_) {
+    rclcpp::PublisherOptions pub_options;
+    pub_options.event_callbacks.matched_callback =
+      [this](rclcpp::MatchedInfo & s)
+      {
+        if (s.current_count == 0) {
+          scan_sub_.unsubscribe();
+        } else if (!scan_sub_.getSubscriber()) {
+          scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+        }
+      };
+    output_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan_filtered",
+      rclcpp::SensorDataQoS(), pub_options);
+  } else {
+    output_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan_filtered",
+      rclcpp::SensorDataQoS());
+    scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+  }
+  #else
+  output_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
+    "scan_filtered", rclcpp::SensorDataQoS());
+  scan_sub_.subscribe(this, "scan", rmw_qos_profile_sensor_data);
+  #endif
 }
 
 // Destructor
