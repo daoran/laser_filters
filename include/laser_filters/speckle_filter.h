@@ -40,6 +40,9 @@
 #ifndef SPECKLE_FILTER_H
 #define SPECKLE_FILTER_H
 
+#include <cmath>
+#include <iostream>
+
 #include <filters/filter_base.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 
@@ -49,13 +52,71 @@ namespace laser_filters
 enum SpeckleFilterType //Enum to select the filtering method
 {
   Distance = 0, // Range based filtering (distance between consecutive points
-  RadiusOutlier = 1 // Euclidean filtering based on radius outlier search
+  RadiusOutlier = 1, // Euclidean filtering based on radius outlier search
+  DistanceMovingWindow = 2 // Range based filtering based on number of in- and outliers
 };
 
 class WindowValidator
 {
 public:
   virtual bool checkWindowValid(const sensor_msgs::msg::LaserScan& scan, size_t idx, size_t window, double max_range_difference) = 0;
+};
+
+class DistanceMovingWindowValidator : public WindowValidator
+{
+  virtual bool checkWindowValid(const sensor_msgs::msg::LaserScan& scan, size_t idx, size_t window, double max_range_difference)
+  {
+    const size_t half_window = std::floor(window/2.0);
+
+    const float& range = scan.ranges[idx];
+    if (std::isnan(range)) {
+      return false;
+    }
+
+    size_t nr_inliers = 0;
+    size_t nr_outliers = 0;
+
+    auto check_in_out_lier = [&](const size_t neighbor_idx)
+    {
+      const float& neighbor_range = scan.ranges[neighbor_idx];
+      if (std::isnan(neighbor_range) || fabs(neighbor_range - range) > max_range_difference)
+      {
+        nr_outliers++;
+      }
+      else
+      {
+        nr_inliers++;
+      }
+      return;
+    };
+
+    for (size_t neighbor_idx_nr = 1; neighbor_idx_nr <= half_window; ++neighbor_idx_nr)
+    {
+      // check points before index if possible side of the
+      if (idx >= neighbor_idx_nr)  // out of bounds check
+      {
+        const size_t neighbor_idx = idx - neighbor_idx_nr;
+        check_in_out_lier(neighbor_idx);
+      }
+
+      // check points after the index
+      const size_t neighbor_idx = idx + neighbor_idx_nr;
+      if (neighbor_idx < scan.ranges.size())  // Out of bound check
+      {
+        check_in_out_lier(neighbor_idx);
+      }
+    }
+
+    // more aggressive removal if the number is the same
+    // ignore filter if both values are equal 0
+    if (!(nr_outliers != 0 && nr_inliers != 0) && nr_outliers >= nr_inliers)
+    {
+      std::cout << "Filtered out: " << idx << " inliner: " << nr_inliers << "; outliers: " << nr_outliers << std::endl;
+      return false;
+    }
+
+    return true;
+  }
 };
 
 class DistanceWindowValidator : public WindowValidator
@@ -213,6 +274,15 @@ public:
           delete validator_;
         }
         validator_ = new laser_filters::DistanceWindowValidator();
+        break;
+
+      case laser_filters::SpeckleFilterType::DistanceMovingWindow:
+        if (validator_)
+        {
+          delete validator_;
+        }
+        validator_ = new laser_filters::DistanceMovingWindowValidator();
+        RCLCPP_ERROR_EXPRESSION(node_->get_logger(), filter_window < 2, "SpackleFilter needs window of at least size 2 to work properly. Please update the parameter and restart the filter!");
         break;
 
       default:
