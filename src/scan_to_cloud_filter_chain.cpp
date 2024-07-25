@@ -54,7 +54,7 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   read_only_desc.read_only = true;
 
   // Declare parameters
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   this->declare_parameter("lazy_subscription", false, read_only_desc);
   #endif
   this->declare_parameter("high_fidelity", false, read_only_desc);
@@ -64,7 +64,7 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
   this->declare_parameter("laser_max_range", DBL_MAX, read_only_desc);
 
   // Get parameters
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   this->get_parameter("lazy_subscription", lazy_subscription_);
   #endif
   this->get_parameter("high_fidelity", high_fidelity_);
@@ -85,7 +85,7 @@ ScanToCloudFilterChain::ScanToCloudFilterChain(
     this->get_node_timers_interface());
   buffer_.setCreateTimerInterface(timer_interface);
 
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   if (lazy_subscription_) {
     rclcpp::PublisherOptions pub_options;
     pub_options.event_callbacks.matched_callback =

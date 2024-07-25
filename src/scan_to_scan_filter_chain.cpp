@@ -50,14 +50,14 @@ ScanToScanFilterChain::ScanToScanFilterChain(
   read_only_desc.read_only = true;
 
   // Declare parameters
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   this->declare_parameter("lazy_subscription", false, read_only_desc);
   #endif
   this->declare_parameter("tf_message_filter_target_frame", "", read_only_desc);
   this->declare_parameter("tf_message_filter_tolerance", 0.03, read_only_desc);
 
   // Get parameters
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   this->get_parameter("lazy_subscription", lazy_subscription_);
   #endif
   this->get_parameter("tf_message_filter_target_frame", tf_message_filter_target_frame_);
@@ -85,7 +85,7 @@ ScanToScanFilterChain::ScanToScanFilterChain(
         std::placeholders::_1));
   }
 
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   if (lazy_subscription_) {
     rclcpp::PublisherOptions pub_options;
     pub_options.event_callbacks.matched_callback =

@@ -70,7 +70,7 @@ public:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 
   // Parameters
-  #ifndef IS_HUMBLE
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
   bool lazy_subscription_;
   #endif
   bool high_fidelity_; // High fidelity (interpolating time across scan)

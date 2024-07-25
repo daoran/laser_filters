@@ -12,8 +12,8 @@ ament_auto_find_build_dependencies()
 # Build
 ##############################################################################
 
-if($ENV{ROS_DISTRO} STREQUAL "humble")
-    add_compile_definitions(IS_HUMBLE)
+if(${rclcpp_VERSION_MAJOR} GREATER_EQUAL 20)
+    add_compile_definitions(RCLCPP_SUPPORTS_MATCHED_CALLBACKS)
 endif()
 
 ament_auto_add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
