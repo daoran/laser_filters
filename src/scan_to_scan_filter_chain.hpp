@@ -58,6 +58,9 @@ protected:
   rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr output_pub_;
 
   // Parameters
+  #ifdef RCLCPP_SUPPORTS_MATCHED_CALLBACKS
+  bool lazy_subscription_;
+  #endif
   std::string tf_message_filter_target_frame_;
   double tf_filter_tolerance_;
 
