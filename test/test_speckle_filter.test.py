@@ -54,7 +54,7 @@ class TestSpeckleFilter(unittest.TestCase):
         dist_msgs_received_flag = node.dist_msg_event_object.wait(timeout=10.0)
         eucl_msgs_received_flag = node.eucl_msg_event_object.wait(timeout=10.0)
         assert dist_msgs_received_flag, "Did not receive distance msgs !"
-        assert eucl_msgs_received_flag, "Did not receive distance msgs !"
+        assert eucl_msgs_received_flag, "Did not receive euclidean msgs !"
 
         expected_scan_ranges = [1, 1, 1, 1, float("nan"), 1, 1, 1, 1, 1, 1]
         for scan_range, expected_scan_range in zip(node.msg_dist.ranges, expected_scan_ranges):
@@ -82,6 +82,8 @@ class TestSpeckleFilter(unittest.TestCase):
                 self.assertEqual(math.isnan(expected_scan_range), math.isnan(scan_range))
             else:
                 self.assertEqual(scan_range, expected_scan_range)
+        rclpy.shutdown()
+        node.join_thread()
 
 
 class TestFixture(Node):
@@ -123,6 +125,9 @@ class TestFixture(Node):
         # Add a spin thread
         self.ros_spin_thread = Thread(target=lambda node: rclpy.spin(node), args=(self,))
         self.ros_spin_thread.start()
+
+    def join_thread(self):
+        self.ros_spin_thread.join()
 
     def dist_cb(self, msg):
         self.msg_dist = msg
