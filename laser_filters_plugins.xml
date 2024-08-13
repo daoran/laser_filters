@@ -1,4 +1,4 @@
-d<class_libraries>
+<class_libraries>
   <library path="laser_scan_filters">
     <class name="laser_filters/LaserArrayFilter" type="laser_filters::LaserArrayFilter" 
 	    base_class_type="filters::FilterBase&lt;sensor_msgs::msg::LaserScan&gt;">
