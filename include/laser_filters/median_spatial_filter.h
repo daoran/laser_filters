@@ -44,14 +44,18 @@
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <limits>
+#include <cmath>
 
 namespace laser_filters
 {
 
 class LaserScanMedianSpatialFilter : public filters::FilterBase<sensor_msgs::msg::LaserScan>
 {
-public:
+private:
   int window_size_;
+
+public:
 
   bool configure()
   {
@@ -81,36 +85,66 @@ public:
     filtered_scan = input_scan;
 
     int half_window = window_size_ / 2;
-    std::vector<float> window;
+    std::vector<float> valid_values;
+    int nan_count = 0;
+    int neg_inf_count = 0;
+    int pos_inf_count = 0;
 
-    for (size_t i = 0; i < input_scan.ranges.size(); ++i)
+    for (size_t current_beam_index = 0; current_beam_index < input_scan.ranges.size(); ++current_beam_index)
     {
-      window.clear();
+        valid_values.clear();
+        nan_count = 0;
+        neg_inf_count = 0;
+        pos_inf_count = 0;
 
-      // Collect points within the window
-      for (int j = -half_window; j <= half_window; ++j)
-      {
-        int index = i + j;
-
-        if (index >= 0 && index < input_scan.ranges.size())
+        // Collect points within the window
+        for (int window_offset = -half_window; window_offset <= half_window; ++window_offset)
         {
-          if (!std::isnan(input_scan.ranges[index]))
-          {
-            window.push_back(input_scan.ranges[index]);
-          }
-        }
-      }
+            int index = current_beam_index + window_offset;
 
-      if (!window.empty())
-      {
-        // Calculate median
-        std::sort(window.begin(), window.end());
-        filtered_scan.ranges[i] = window[window.size() / 2];
-      }
-      else
-      {
-        filtered_scan.ranges[i] = std::numeric_limits<float>::quiet_NaN();
-      }
+            if (index >= 0 && index < input_scan.ranges.size())
+            {
+                float value = input_scan.ranges[index];
+
+                if (std::isnan(value))
+                {
+                    nan_count++;
+                }
+                else if (value == -std::numeric_limits<float>::infinity())
+                {
+                    neg_inf_count++;
+                }
+                else if (value == std::numeric_limits<float>::infinity())
+                {
+                    pos_inf_count++;
+                }
+                else
+                {
+                    valid_values.push_back(value);
+                }
+            }
+        }
+
+        // Determine which set is the largest
+        // In case of a tie, prioritize valid-values over nan-values over neg-inf-values over pos-inf-values
+        if (valid_values.size() >= nan_count && valid_values.size() >= neg_inf_count && valid_values.size() >= pos_inf_count)
+        {
+            // Sort the valid values and return the median
+            std::sort(valid_values.begin(), valid_values.end());
+            filtered_scan.ranges[current_beam_index] = valid_values[valid_values.size() / 2];
+        }
+        else if (nan_count >= valid_values.size() && nan_count >= neg_inf_count && nan_count >= pos_inf_count)
+        {
+            filtered_scan.ranges[current_beam_index] = std::numeric_limits<float>::quiet_NaN();
+        }
+        else if (neg_inf_count >= valid_values.size() && neg_inf_count >= nan_count && neg_inf_count >= pos_inf_count)
+        {
+            filtered_scan.ranges[current_beam_index] = -std::numeric_limits<float>::infinity();
+        }
+        else if (pos_inf_count >= valid_values.size() && pos_inf_count >= nan_count && pos_inf_count >= neg_inf_count)
+        {
+            filtered_scan.ranges[current_beam_index] = std::numeric_limits<float>::infinity();
+        }
     }
 
     return true;
