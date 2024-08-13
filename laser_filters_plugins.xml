@@ -1,4 +1,4 @@
-<class_libraries>
+d<class_libraries>
   <library path="laser_scan_filters">
     <class name="laser_filters/LaserArrayFilter" type="laser_filters::LaserArrayFilter" 
 	    base_class_type="filters::FilterBase&lt;sensor_msgs::msg::LaserScan&gt;">
@@ -63,7 +63,7 @@
     <class name="laser_filters/LaserScanMedianSpatialFilter" type="laser_filters::LaserScanMedianSpatialFilter" 
 	    base_class_type="filters::FilterBase&lt;sensor_msgs::msg::LaserScan&gt;">
       <description>
-	This is a spatial 1D median filter which filters sensor_msgs::msg::LaserScan messages.  
+	This is a spatial 1D median filter which filters sensor_msgs::msg::LaserScan messages. It smoothes continuous obstacles/walls and removes isolated/scattered noise.
       </description>
     </class>
     <class name="laser_filters/LaserMedianFilter" type="laser_filters::LaserMedianFilter" 
