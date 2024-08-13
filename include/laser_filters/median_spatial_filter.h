@@ -59,14 +59,13 @@ public:
 
   bool configure()
   {
-    // Default window size
-    window_size_ = 3;
     getParam("window_size", window_size_);
 
     // Ensure window size is positive
     if (window_size_ <= 0)
     {
-      throw std::runtime_error("Window size must be positive");
+      RCLCPP_ERROR(logging_interface_->get_logger(), "Window size must be positive.\n");
+      return false;
     }
 
     // Ensure window size is odd
