@@ -18,6 +18,7 @@ from ament_index_python.packages import get_package_share_directory
 import pytest
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from sensor_msgs.msg import LaserScan
 
 
@@ -91,7 +92,8 @@ class TestFixture(Node):
         super().__init__("test_speckle_filter_distance")
         self.dist_msg_event_object = Event()
         self.eucl_msg_event_object = Event()
-        self.publisher = self.create_publisher(LaserScan, "scan", 10)
+        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.publisher = self.create_publisher(LaserScan, "scan", qos_profile=qos)
 
     def wait_for_subscribers(self, timeout):
         timer_period = 0.1
