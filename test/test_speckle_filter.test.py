@@ -18,7 +18,6 @@ from ament_index_python.packages import get_package_share_directory
 import pytest
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from sensor_msgs.msg import LaserScan
 
 
@@ -50,12 +49,16 @@ class TestSpeckleFilter(unittest.TestCase):
         node = TestFixture()
         self.assertTrue(node.wait_for_subscribers(10))
         node.start_subscribers()
-        node.publish_laser_scan()
 
-        dist_msgs_received_flag = node.dist_msg_event_object.wait(timeout=10.0)
-        eucl_msgs_received_flag = node.eucl_msg_event_object.wait(timeout=10.0)
-        assert dist_msgs_received_flag, "Did not receive distance msgs !"
-        assert eucl_msgs_received_flag, "Did not receive euclidean msgs !"
+        publish_rate = node.create_rate(5)
+        for _ in range(10):
+            if node.dist_msg_event_object.isSet() and node.eucl_msg_event_object.isSet():
+                break
+            node.publish_laser_scan()
+            publish_rate.sleep()
+
+        assert node.dist_msg_event_object.isSet(), "Did not receive distance msgs !"
+        assert node.eucl_msg_event_object.isSet(), "Did not receive euclidean msgs !"
 
         expected_scan_ranges = [1, 1, 1, 1, float("nan"), 1, 1, 1, 1, 1, 1]
         for scan_range, expected_scan_range in zip(node.msg_dist.ranges, expected_scan_ranges):
@@ -92,8 +95,7 @@ class TestFixture(Node):
         super().__init__("test_speckle_filter_distance")
         self.dist_msg_event_object = Event()
         self.eucl_msg_event_object = Event()
-        qos = QoSProfile(depth=1, durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
-        self.publisher = self.create_publisher(LaserScan, "scan", qos_profile=qos)
+        self.publisher = self.create_publisher(LaserScan, "scan", 10)
 
     def wait_for_subscribers(self, timeout):
         timer_period = 0.1
