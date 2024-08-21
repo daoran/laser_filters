@@ -72,7 +72,7 @@ namespace laser_filters
         //loop through the scan and remove ranges at angles between lower_angle_ and upper_angle_
         for(unsigned int i = 0; i < input_scan.ranges.size(); ++i){
           if((current_angle > lower_angle_) && (current_angle < upper_angle_)){
-            filtered_scan.ranges[i] = input_scan.range_max + 1.0;
+            filtered_scan.ranges[i] = std::numeric_limits<float>::quiet_NaN();
             if(i < filtered_scan.intensities.size()){
               filtered_scan.intensities[i] = 0.0;
             }
