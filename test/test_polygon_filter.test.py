@@ -37,8 +37,14 @@ class TestPolygonFilter(unittest.TestCase):
         node.start_subscriber()
         node.publish_laser_scan()
 
-        msgs_received_flag = node._msg_event_object.wait(timeout=10.0)
-        assert msgs_received_flag, "Did not receive msgs !"
+        publish_rate = node.create_rate(5)
+        for _ in range(10):
+            if node._msg_event_object.isSet():
+                break
+            node.publish_laser_scan()
+            publish_rate.sleep()
+
+        assert node._msg_event_object.isSet(), "Did not receive msgs !"
         expected_scan_ranges = [1.0, 1.0, 1.0, 1.0, float("nan"), float("nan"), float("nan"), 1, 1, 1, 1]
         for scan_range, expected_scan_range in zip(node._received_message.ranges, expected_scan_ranges):
             if math.isnan(expected_scan_range) or math.isnan(scan_range):
