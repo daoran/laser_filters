@@ -69,8 +69,10 @@ public:
     }
 
     // Ensure window size is odd
+    // If the window_size is even, the current range, which will be modified cannot be centered in the window.
     if (window_size_ % 2 == 0)
     {
+      RCLCPP_WARN(logging_interface_->get_logger(), "Window size must be odd. Automatically setting window_size to %d instead of %d.\n", window_size_+1, window_size_);
       window_size_ += 1;
     }
 
