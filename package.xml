@@ -28,6 +28,7 @@
   <depend>tf2_kdl</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>launch_testing_ament_cmake</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
