@@ -47,6 +47,7 @@ namespace laser_filters
     public:
       double lower_angle_;
       double upper_angle_;
+      bool replace_with_nan_;
 
       bool configure()
       {
@@ -59,6 +60,11 @@ namespace laser_filters
           return false;
         }
 
+        //toggle to use NaN for filtering scans; defaults to false for backward compatibility.
+        //https://github.com/ros-perception/laser_filters/pull/202
+        replace_with_nan_ = false;
+        getParam("replace_with_nan", replace_with_nan_);
+
         return true;
       }
 
@@ -69,10 +75,11 @@ namespace laser_filters
 
         double current_angle = input_scan.angle_min;
         unsigned int count = 0;
+        float replace_value = replace_with_nan_ ? std::numeric_limits<float>::quiet_NaN() : input_scan.range_max + 1.0;
         //loop through the scan and remove ranges at angles between lower_angle_ and upper_angle_
         for(unsigned int i = 0; i < input_scan.ranges.size(); ++i){
           if((current_angle > lower_angle_) && (current_angle < upper_angle_)){
-            filtered_scan.ranges[i] = input_scan.range_max + 1.0;
+            filtered_scan.ranges[i] = replace_value;
             if(i < filtered_scan.intensities.size()){
               filtered_scan.intensities[i] = 0.0;
             }
