@@ -60,6 +60,8 @@ namespace laser_filters
           return false;
         }
 
+        //toggle to use NaN for filtering scans; defaults to false for backward compatibility.
+        //https://github.com/ros-perception/laser_filters/pull/202
         replace_with_nan_ = false;
         getParam("replace_with_nan", replace_with_nan_);
 
