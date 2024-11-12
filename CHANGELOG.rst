@@ -2,8 +2,8 @@
 Changelog for package laser_filters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.8 (2024-11-12)
+------------------
 * Merge pull request `#202 <https://github.com/ros-perception/laser_filters/issues/202>`_ from Oscar-Robotics/ros2
   Using NaN instead of range_max+1 to remove scans in angular_bounds_filter_in_place
 * Merge branch 'ros2' of https://github.com/Oscar-Robotics/laser_filters into ros2
